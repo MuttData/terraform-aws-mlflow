@@ -41,7 +41,7 @@ resource "aws_iam_role" "ecs_execution" {
 resource "aws_iam_role_policy_attachment" "ecs_execution" {
   count      = var.create_iam_roles ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-  role       = aws_iam_role.ecs_execution.name
+  role       = aws_iam_role.ecs_execution.0.name
 }
 
 resource "aws_security_group" "ecs_service" {
@@ -106,7 +106,7 @@ resource "aws_ecs_task_definition" "mlflow" {
         logDriver     = "awslogs"
         secretOptions = null
         options = {
-          "awslogs-group"         = var.cloudwatch_log_group_external_arn ? var.cloudwatch_log_group_external_arn : aws_cloudwatch_log_group.mlflow.name
+          "awslogs-group"         = local.cloudwatch_log_group_external_name
           "awslogs-region"        = data.aws_region.current.name
           "awslogs-stream-prefix" = "cis"
         }
@@ -115,8 +115,8 @@ resource "aws_ecs_task_definition" "mlflow" {
   ], var.service_sidecar_container_definitions))
 
   network_mode             = "awsvpc"
-  task_role_arn            = var.create_iam_roles ? aws_iam_role.ecs_task.arn : var.ecs_task_role_arn
-  execution_role_arn       = var.create_iam_roles ? aws_iam_role.ecs_execution.arn : var.ecs_execution_role_arn
+  task_role_arn            = local.ecs_task_role_arn
+  execution_role_arn       = local.ecs_execution_role_arn
   requires_compatibilities = [var.ecs_launch_type]
   cpu                      = var.service_cpu
   memory                   = var.service_memory
@@ -165,7 +165,7 @@ data "aws_ami" "ecs_optimized_ami_linux" {
 resource "aws_launch_template" "mlflow" {
   count                  = var.ecs_launch_type == "EC2" ? 1 : 0
   name                   = "${var.unique_name}-launch-template"
-  image_id               = data.aws_ami.ecs_optimized_ami_linux.id
+  image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
   iam_instance_profile   = "ecsInstanceRole"
   instance_type          = var.ec2_template_instance_type
   user_data              = <<EOF
@@ -184,7 +184,7 @@ resource "aws_autoscaling_group" "mlflow" {
   min_size = var.ecs_min_instance_count
   max_size = var.ecs_max_instance_count
   launch_template {
-    id      = aws_launch_template.mlflow.id
+    id      = aws_launch_template.mlflow.0.id
     version = "$Latest"
   }
   vpc_zone_identifier = var.service_subnet_ids
@@ -200,7 +200,7 @@ resource "aws_ecs_capacity_provider" "mlflow" {
   name  = "${var.unique_name}-capacity-provider"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.mlflow.arn
+    auto_scaling_group_arn         = aws_autoscaling_group.mlflow.0.arn
     managed_termination_protection = "ENABLED"
 
     managed_scaling {

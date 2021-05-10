@@ -62,10 +62,10 @@ variable "ecs_max_instance_count" {
   description = "Maximum number of instances for the ecs cluster."
 }
 
-variable "cloudwatch_log_group_external_arn" {
+variable "cloudwatch_log_group_external_name" {
   type        = string
   default     = null
-  description = "To use an existing cloud watch log group, ARN."
+  description = "To use an existing cloud watch log group, name."
 }
 
 variable "load_balancer_subnet_ids" {
