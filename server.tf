@@ -66,7 +66,7 @@ resource "aws_security_group" "ecs_service" {
 }
 
 resource "aws_cloudwatch_log_group" "mlflow" {
-  count             = var.cloudwatch_log_group_external_arn ? 0 : 1
+  count             = var.cloudwatch_log_group_external_name ? 0 : 1
   name              = "/aws/ecs/${var.unique_name}"
   retention_in_days = var.service_log_retention_in_days
   tags              = local.tags
@@ -166,8 +166,8 @@ resource "aws_launch_template" "mlflow" {
   count                  = var.ecs_launch_type == "EC2" ? 1 : 0
   name                   = "${var.unique_name}-launch-template"
   image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
-  iam_instance_profile   = "ecsInstanceRole"
   instance_type          = var.ec2_template_instance_type
+  vpc_security_group_ids = [aws_security_group.ecs_service.id]
   user_data              = <<EOF
 #!/bin/bash
 # The cluster this agent should check into.
@@ -175,7 +175,9 @@ echo 'ECS_CLUSTER=${var.unique_name}' >> /etc/ecs/ecs.config
 # Disable privileged containers.
 echo 'ECS_DISABLE_PRIVILEGED=true' >> /etc/ecs/ecs.config
 EOF
-  vpc_security_group_ids = [aws_security_group.ecs_service.id]
+  iam_instance_profile {
+    name = "ecsInstanceRole"
+  }
 }
 
 resource "aws_autoscaling_group" "mlflow" {
