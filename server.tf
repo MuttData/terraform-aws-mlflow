@@ -74,9 +74,9 @@ resource "aws_cloudwatch_log_group" "mlflow" {
 
 resource "aws_ecs_cluster" "mlflow" {
   name               = var.unique_name
-  capacity_providers = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.name : "FARGATE"]
+  capacity_providers = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
   default_capacity_provider_strategy {
-    capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.name : "FARGATE"
+    capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"
   }
   tags = local.tags
 }
