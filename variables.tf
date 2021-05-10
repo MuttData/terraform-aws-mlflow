@@ -163,7 +163,13 @@ variable "database_external_name" {
 variable "database_engine" {
   type        = string
   default     = "aurora-mysql"
-  description = "Database engine, default 3306 'aurora-mysql'."
+  description = "Database engine, default 'aurora-mysql'."
+}
+
+variable "database_port" {
+  type        = number
+  default     = 3306
+  description = "Database port, default 3306."
 }
 
 variable "database_engine_version" {
