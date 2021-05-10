@@ -186,6 +186,7 @@ variable "database_port" {
 
 variable "database_subnet_ids" {
   type        = list(string)
+  default     = null
   description = "List of subnets where the RDS database will be deployed"
 }
 
