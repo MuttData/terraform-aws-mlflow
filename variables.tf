@@ -44,12 +44,6 @@ variable "ec2_template_instance_type" {
   description = "EC2 template instance type. Mandatory if ecs_launch_type is EC2"
 }
 
-variable "ecs_instance_profile_name" {
-  type        = string
-  default     = null
-  description = "ECS instance profile name to attach to cluster's EC2 instances. Mandatory if ecs_launch_type is EC2"
-}
-
 variable "ecs_service_count" {
   type        = number
   default     = 2
