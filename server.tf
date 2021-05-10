@@ -1,8 +1,9 @@
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "ecs_task" {
-  name = "${var.unique_name}-ecs-task"
-  tags = local.tags
+  count = var.create_iam_roles ? 1 : 0
+  name  = "${var.unique_name}-ecs-task"
+  tags  = local.tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -19,8 +20,9 @@ resource "aws_iam_role" "ecs_task" {
 }
 
 resource "aws_iam_role" "ecs_execution" {
-  name = "${var.unique_name}-ecs-execution"
-  tags = local.tags
+  count = var.create_iam_roles ? 1 : 0
+  name  = "${var.unique_name}-ecs-execution"
+  tags  = local.tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -37,6 +39,7 @@ resource "aws_iam_role" "ecs_execution" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution" {
+  count      = var.create_iam_roles ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   role       = aws_iam_role.ecs_execution.name
 }
@@ -63,13 +66,18 @@ resource "aws_security_group" "ecs_service" {
 }
 
 resource "aws_cloudwatch_log_group" "mlflow" {
+  count             = var.cloudwatch_log_group_external_arn ? 0 : 1
   name              = "/aws/ecs/${var.unique_name}"
   retention_in_days = var.service_log_retention_in_days
   tags              = local.tags
 }
 
 resource "aws_ecs_cluster" "mlflow" {
-  name = var.unique_name
+  name               = var.unique_name
+  capacity_providers = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.name : "FARGATE"]
+  default_capacity_provider_strategy {
+    capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.name : "FARGATE"
+  }
   tags = local.tags
 }
 
@@ -85,7 +93,7 @@ resource "aws_ecs_task_definition" "mlflow" {
       # As of version 1.9.1, MLflow doesn't support specifying the backend store uri as an environment variable. ECS doesn't allow evaluating secret environment variables from within the command. Therefore, we are forced to override the entrypoint and assume the docker image has a shell we can use to interpolate the secret at runtime.
       entryPoint = ["sh", "-c"]
       command = [
-        "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=mysql+pymysql://${aws_rds_cluster.backend_store.master_username}:`echo -n $DB_PASSWORD`@${aws_rds_cluster.backend_store.endpoint}:${aws_rds_cluster.backend_store.port}/${aws_rds_cluster.backend_store.database_name} --gunicorn-opts '${var.gunicorn_opts}' \""
+        "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=mysql+pymysql://${var.database_use_external ? var.database_external_username : aws_rds_cluster.backend_store.master_username}:`echo -n $DB_PASSWORD`@${var.database_use_external ? var.database_external_host : aws_rds_cluster.backend_store.endpoint}:${var.database_use_external ? var.database_external_port : aws_rds_cluster.backend_store.port}/${var.database_use_external ? var.database_external_name : aws_rds_cluster.backend_store.database_name} --gunicorn-opts '${var.gunicorn_opts}' \""
       ]
       portMappings = [{ containerPort = local.service_port }]
       secrets = [
@@ -98,7 +106,7 @@ resource "aws_ecs_task_definition" "mlflow" {
         logDriver     = "awslogs"
         secretOptions = null
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.mlflow.name
+          "awslogs-group"         = var.cloudwatch_log_group_external_arn ? var.cloudwatch_log_group_external_arn : aws_cloudwatch_log_group.mlflow.name
           "awslogs-region"        = data.aws_region.current.name
           "awslogs-stream-prefix" = "cis"
         }
@@ -107,9 +115,9 @@ resource "aws_ecs_task_definition" "mlflow" {
   ], var.service_sidecar_container_definitions))
 
   network_mode             = "awsvpc"
-  task_role_arn            = aws_iam_role.ecs_task.arn
-  execution_role_arn       = aws_iam_role.ecs_execution.arn
-  requires_compatibilities = ["FARGATE"]
+  task_role_arn            = var.create_iam_roles ? aws_iam_role.ecs_task.arn : var.ecs_task_role_arn
+  execution_role_arn       = var.create_iam_roles ? aws_iam_role.ecs_execution.arn : var.ecs_execution_role_arn
+  requires_compatibilities = [var.ecs_launch_type]
   cpu                      = var.service_cpu
   memory                   = var.service_memory
 }
@@ -118,8 +126,8 @@ resource "aws_ecs_service" "mlflow" {
   name             = var.unique_name
   cluster          = aws_ecs_cluster.mlflow.id
   task_definition  = aws_ecs_task_definition.mlflow.arn
-  desired_count    = 2
-  launch_type      = "FARGATE"
+  desired_count    = var.ecs_service_count
+  launch_type      = var.ecs_launch_type
   platform_version = "1.4.0"
 
 
@@ -141,6 +149,67 @@ resource "aws_ecs_service" "mlflow" {
   depends_on = [
     aws_lb.mlflow,
   ]
+}
+
+data "aws_ami" "ecs_optimized_ami_linux" {
+  count       = var.ecs_launch_type == "EC2" ? 1 : 0
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-*-amazon-ecs-optimized"]
+  }
+}
+
+resource "aws_launch_template" "mlflow" {
+  count                  = var.ecs_launch_type == "EC2" ? 1 : 0
+  name                   = "${var.unique_name}-launch-template"
+  image_id               = data.aws_ami.ecs_optimized_ami_linux.id
+  iam_instance_profile   = "ecsInstanceRole"
+  instance_type          = var.ec2_template_instance_type
+  user_data              = <<EOF
+#!/bin/bash
+# The cluster this agent should check into.
+echo 'ECS_CLUSTER=${aws_ecs_cluster.mlflow.name}' >> /etc/ecs/ecs.config
+# Disable privileged containers.
+echo 'ECS_DISABLE_PRIVILEGED=true' >> /etc/ecs/ecs.config
+EOF
+  vpc_security_group_ids = [aws_security_group.ecs_service.id]
+}
+
+resource "aws_autoscaling_group" "mlflow" {
+  count    = var.ecs_launch_type == "EC2" ? 1 : 0
+  name     = "${var.unique_name}-asg"
+  min_size = var.ecs_min_instance_count
+  max_size = var.ecs_max_instance_count
+  launch_template {
+    id      = aws_launch_template.mlflow.id
+    version = "$Latest"
+  }
+  vpc_zone_identifier = var.service_subnet_ids
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = ""
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "mlflow" {
+  count = var.ecs_launch_type == "EC2" ? 1 : 0
+  name  = "${var.unique_name}-capacity-provider"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.mlflow.arn
+    managed_termination_protection = "ENABLED"
+
+    managed_scaling {
+      target_capacity           = 90
+      maximum_scaling_step_size = 100
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+    }
+  }
 }
 
 resource "aws_appautoscaling_target" "mlflow" {

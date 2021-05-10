@@ -14,6 +14,66 @@ variable "vpc_id" {
   description = "AWS VPC to deploy MLflow into"
 }
 
+variable "create_iam_roles" {
+  type        = bool
+  default     = true
+  description = "By default the module will create all necessary roles, if you want to use existing set this to false."
+}
+
+variable "ecs_task_role_arn" {
+  type        = string
+  default     = null
+  description = "ECS task role ARN."
+}
+
+variable "ecs_execution_role_arn" {
+  type        = string
+  default     = null
+  description = "ECS execution role ARN."
+}
+
+variable "ecs_launch_type" {
+  type        = string
+  default     = "FARGATE"
+  description = "ECS launch type. Can be EC2 or FARGATE, by default FARGATE."
+}
+
+variable "ec2_template_instance_type" {
+  type        = string
+  default     = null
+  description = "EC2 template instance type. Mandatory if ecs_launch_type is EC2"
+}
+
+variable "ecs_instance_profile_name" {
+  type        = string
+  default     = null
+  description = "ECS instance profile name to attach to cluster's EC2 instances. Mandatory if ecs_launch_type is EC2"
+}
+
+variable "ecs_service_count" {
+  type        = number
+  default     = 2
+  description = "Number of replicas to deploy. Defualt 2."
+}
+
+variable "ecs_min_instance_count" {
+  type        = number
+  default     = 1
+  description = "Minimum number of instances for the ecs cluster."
+}
+
+variable "ecs_max_instance_count" {
+  type        = number
+  default     = 2
+  description = "Maximum number of instances for the ecs cluster."
+}
+
+variable "cloudwatch_log_group_external_arn" {
+  type        = string
+  default     = null
+  description = "To use an existing cloud watch log group, ARN."
+}
+
 variable "load_balancer_subnet_ids" {
   type        = list(string)
   description = "List of subnets where the Load Balancer will be deployed"
@@ -74,6 +134,60 @@ variable "service_max_capacity" {
   type        = number
   default     = 2
   description = "Maximum number of instances for the ecs service. This will create an aws_appautoscaling_target that can later on be used to autoscale the MLflow instance"
+}
+
+variable "database_use_external" {
+  type        = bool
+  default     = false
+  description = "If to create a database cluster or use an existing database."
+}
+
+variable "database_external_username" {
+  type        = string
+  default     = null
+  description = "ECS execution role ARN."
+}
+
+variable "database_external_host" {
+  type        = string
+  default     = null
+  description = "Database host, if using external."
+}
+
+variable "database_external_port" {
+  type        = string
+  default     = null
+  description = "Database port, if using external."
+}
+
+variable "database_external_name" {
+  type        = string
+  default     = null
+  description = "Database name, if using external."
+}
+
+variable "database_engine" {
+  type        = string
+  default     = "aurora-mysql"
+  description = "Database engine, default 3306 'aurora-mysql'."
+}
+
+variable "database_engine_version" {
+  type        = string
+  default     = "5.7.mysql_aurora.2.07.1"
+  description = "Database version, default '5.7.mysql_aurora.2.07.1'."
+}
+
+variable "database_engine_mode" {
+  type        = string
+  default     = "serverless"
+  description = "Database engine mode, default 'serverless'."
+}
+
+variable "database_port" {
+  type        = string
+  default     = 3306
+  description = "Database port, default 3306 (MySQL)."
 }
 
 variable "database_subnet_ids" {

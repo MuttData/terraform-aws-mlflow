@@ -11,8 +11,9 @@ data "aws_secretsmanager_secret_version" "db_password" {
 }
 
 resource "aws_iam_role_policy" "db_secrets" {
-  name = "${var.unique_name}-read-db-pass-secret"
-  role = aws_iam_role.ecs_execution.id
+  count = var.database_use_external ? 0 : 1
+  name  = "${var.unique_name}-read-db-pass-secret"
+  role  = var.create_iam_roles ? aws_iam_role.ecs_execution.arn : var.ecs_execution_role_arn
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -34,11 +35,13 @@ resource "aws_iam_role_policy" "db_secrets" {
 }
 
 resource "aws_db_subnet_group" "rds" {
+  count      = var.database_use_external ? 0 : 1
   name       = "${var.unique_name}-rds"
   subnet_ids = var.database_subnet_ids
 }
 
 resource "aws_security_group" "rds" {
+  count  = var.database_use_external ? 0 : 1
   name   = "${var.unique_name}-rds"
   vpc_id = var.vpc_id
   tags   = local.tags
@@ -59,11 +62,12 @@ resource "aws_security_group" "rds" {
 }
 
 resource "aws_rds_cluster" "backend_store" {
+  count                     = var.database_use_external ? 0 : 1
   cluster_identifier_prefix = var.unique_name
   tags                      = local.tags
-  engine                    = "aurora-mysql"
-  engine_version            = "5.7.mysql_aurora.2.07.1"
-  engine_mode               = "serverless"
+  engine                    = var.database_engine
+  engine_version            = var.database_engine_version
+  engine_mode               = var.database_engine_mode
   port                      = local.db_port
   db_subnet_group_name      = aws_db_subnet_group.rds.name
   vpc_security_group_ids    = [aws_security_group.rds.id]
