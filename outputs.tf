@@ -19,11 +19,11 @@ output "cluster_id" {
 }
 
 output "service_execution_role_id" {
-  value = aws_iam_role.ecs_execution.id
+  value = length(aws_iam_role.ecs_execution) > 0 ? aws_iam_role.ecs_execution.0.id : null
 }
 
 output "service_task_role_id" {
-  value = aws_iam_role.ecs_task.id
+  value = length(aws_iam_role.ecs_task) > 0 ? aws_iam_role.ecs_task.0.id : null
 }
 
 output "service_autoscaling_target_service_namespace" {
