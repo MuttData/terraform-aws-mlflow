@@ -223,6 +223,12 @@ variable "database_skip_final_snapshot" {
   default = false
 }
 
+variable "backend_store_uri_engine" {
+  type        = string
+  default     = "mysql+pymysql"
+  description = "Mlflow backend store uri engine to use. Default: mysql+pymysql."
+}
+
 variable "artifact_bucket_id" {
   type        = string
   default     = null
