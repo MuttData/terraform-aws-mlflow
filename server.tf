@@ -66,7 +66,7 @@ resource "aws_security_group" "ecs_service" {
 }
 
 resource "aws_cloudwatch_log_group" "mlflow" {
-  count             = var.cloudwatch_log_group_external_name ? 0 : 1
+  count             = var.cloudwatch_log_group_external_name != null ? 0 : 1
   name              = "/aws/ecs/${var.unique_name}"
   retention_in_days = var.service_log_retention_in_days
   tags              = local.tags
