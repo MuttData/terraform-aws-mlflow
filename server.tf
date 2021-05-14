@@ -93,7 +93,7 @@ resource "aws_ecs_task_definition" "mlflow" {
         "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=${var.backend_store_uri_engine}://${local.mlflow_backend_store_username}:`echo -n $DB_PASSWORD`@${local.mlflow_backend_store_endpoint}:${local.mlflow_backend_store_port}/${local.mlflow_backend_store_port_name} --gunicorn-opts '${var.gunicorn_opts}' \""
       ]
       portMappings = [{ containerPort = local.service_port }]
-      environment = jsondecode(var.mlflow_env_vars)
+      environment  = jsondecode(var.mlflow_env_vars)
       secrets = [
         {
           name      = "DB_PASSWORD"
@@ -160,19 +160,23 @@ data "aws_ami" "ecs_optimized_ami_linux" {
   }
 }
 
-resource "aws_launch_template" "mlflow" {
-  count                  = var.ecs_launch_type == "EC2" ? 1 : 0
-  name                   = "${var.unique_name}-launch-template"
-  image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
-  instance_type          = var.ec2_template_instance_type
-  vpc_security_group_ids = [local.ecs_security_group_id]
-  user_data              = <<EOF
+data "template_file" "mlflow_launch_template_user_data" {
+  template = <<EOF
 #!/bin/bash
 # The cluster this agent should check into.
 echo 'ECS_CLUSTER=${var.unique_name}' >> /etc/ecs/ecs.config
 # Disable privileged containers.
 echo 'ECS_DISABLE_PRIVILEGED=true' >> /etc/ecs/ecs.config
 EOF
+}
+
+resource "aws_launch_template" "mlflow" {
+  count                  = var.ecs_launch_type == "EC2" ? 1 : 0
+  name                   = "${var.unique_name}-launch-template"
+  image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
+  instance_type          = var.ec2_template_instance_type
+  vpc_security_group_ids = [local.ecs_security_group_id]
+  user_data              = base64encode(data.template_file.test.rendered)
   iam_instance_profile {
     name = "ecsInstanceRole"
   }
