@@ -93,7 +93,7 @@ resource "aws_ecs_task_definition" "mlflow" {
         "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=${var.backend_store_uri_engine}://${local.mlflow_backend_store_username}:`echo -n $DB_PASSWORD`@${local.mlflow_backend_store_endpoint}:${local.mlflow_backend_store_port}/${local.mlflow_backend_store_port_name} --gunicorn-opts '${var.gunicorn_opts}' \""
       ]
       portMappings = [{ containerPort = local.service_port }]
-      environment: [var.mlflow_env_vars],
+      environment = json_decode(var.mlflow_env_vars)
       secrets = [
         {
           name      = "DB_PASSWORD"
