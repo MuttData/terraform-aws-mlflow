@@ -45,7 +45,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 }
 
 resource "aws_security_group" "ecs_service" {
-  count = var.ecs_external_security_group_id ? 0 : 1
+  count = var.ecs_external_security_group_id != null ? 0 : 1
   name  = "${var.unique_name}-ecs-service"
   tags  = local.tags
 
@@ -220,7 +220,7 @@ resource "aws_appautoscaling_target" "mlflow" {
 }
 
 resource "aws_security_group" "lb" {
-  count  = var.load_balancer_external_security_group_id ? 0 : 1
+  count  = var.load_balancer_external_security_group_id != null ? 0 : 1
   name   = "${var.unique_name}-lb"
   tags   = local.tags
   vpc_id = var.vpc_id
