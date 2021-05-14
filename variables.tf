@@ -142,6 +142,12 @@ variable "service_max_capacity" {
   description = "Maximum number of instances for the ecs service. This will create an aws_appautoscaling_target that can later on be used to autoscale the MLflow instance"
 }
 
+variable "mlflow_env_vars" {
+  type        = string
+  default     = "{}"
+  description = "Mlflow environment variables to inject in the container"
+}
+
 variable "database_use_external" {
   type        = bool
   default     = false
