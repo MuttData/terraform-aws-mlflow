@@ -3,15 +3,22 @@ data "aws_availability_zones" "available" {
 }
 
 data "aws_secretsmanager_secret" "db_password" {
-  arn = var.database_password_secret_arn
+  count = var.database_password_secret_is_parameter_store ? 0 : 1
+  arn   = var.database_password_secret_arn
 }
 
 data "aws_secretsmanager_secret_version" "db_password" {
-  secret_id = data.aws_secretsmanager_secret.db_password.id
+  count     = var.database_password_secret_is_parameter_store ? 0 : 1
+  secret_id = data.aws_secretsmanager_secret.db_password.0.id
+}
+
+data "aws_ssm_parameter" "db_password" {
+  count = var.database_password_secret_is_parameter_store ? 1 : 0
+  arn   = var.database_password_secret_arn
 }
 
 resource "aws_iam_role_policy" "db_secrets" {
-  count = var.database_use_external ? 0 : 1
+  count = var.database_use_external || var.database_password_secret_is_parameter_store ? 0 : 1
   name  = "${var.unique_name}-read-db-pass-secret"
   role  = local.ecs_execution_role_arn
 
@@ -27,7 +34,7 @@ resource "aws_iam_role_policy" "db_secrets" {
           "secretsmanager:ListSecretVersionIds",
         ]
         Resource = [
-          data.aws_secretsmanager_secret_version.db_password.arn,
+          data.aws_secretsmanager_secret_version.db_password.0.arn,
         ]
       },
     ]
@@ -76,7 +83,7 @@ resource "aws_rds_cluster" "backend_store" {
   database_name             = "mlflow"
   skip_final_snapshot       = var.database_skip_final_snapshot
   final_snapshot_identifier = var.unique_name
-  master_password           = data.aws_secretsmanager_secret_version.db_password.secret_string
+  master_password           = local.db_password_value
   backup_retention_period   = 14
 
   scaling_configuration {

@@ -204,7 +204,13 @@ variable "database_subnet_ids" {
 
 variable "database_password_secret_arn" {
   type        = string
-  description = "The ARN of the SecretManager secret that defines the database password. It needs to be created before calling the module"
+  description = "The ARN of the SecretManager/ParameterStore secret that defines the database password. It needs to be created before calling the module"
+}
+
+variable "database_password_secret_is_parameter_store" {
+  type        = bool
+  default     = false
+  description = "Specifies if your database password secret is stored in the parameter store, by default false and we assume it is in the secrets manager"
 }
 
 variable "database_min_capacity" {

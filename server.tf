@@ -96,7 +96,7 @@ resource "aws_ecs_task_definition" "mlflow" {
       secrets = [
         {
           name      = "DB_PASSWORD"
-          valueFrom = data.aws_secretsmanager_secret.db_password.arn
+          valueFrom = local.db_password_arn
         },
       ]
       logConfiguration = {
