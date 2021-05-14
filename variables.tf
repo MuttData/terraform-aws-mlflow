@@ -202,9 +202,9 @@ variable "database_subnet_ids" {
   description = "List of subnets where the RDS database will be deployed"
 }
 
-variable "database_password_secret_arn" {
+variable "database_password_secret_name" {
   type        = string
-  description = "The ARN of the SecretManager/ParameterStore secret that defines the database password. It needs to be created before calling the module"
+  description = "The name of the SecretManager/ParameterStore secret that defines the database password. It needs to be created before calling the module"
 }
 
 variable "database_password_secret_is_parameter_store" {

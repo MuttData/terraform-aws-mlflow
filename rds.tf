@@ -4,7 +4,7 @@ data "aws_availability_zones" "available" {
 
 data "aws_secretsmanager_secret" "db_password" {
   count = var.database_password_secret_is_parameter_store ? 0 : 1
-  arn   = var.database_password_secret_arn
+  name  = var.database_password_secret_name
 }
 
 data "aws_secretsmanager_secret_version" "db_password" {
@@ -14,7 +14,7 @@ data "aws_secretsmanager_secret_version" "db_password" {
 
 data "aws_ssm_parameter" "db_password" {
   count = var.database_password_secret_is_parameter_store ? 1 : 0
-  arn   = var.database_password_secret_arn
+  name  = var.database_password_secret_name
 }
 
 resource "aws_iam_role_policy" "db_secrets" {

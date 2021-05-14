@@ -48,7 +48,7 @@ module "mlflow" {
   load_balancer_ingress_cidr_blocks = ["192.0.2.0/24"]
   service_subnet_ids                = ["private-subnet-az-1", "private-subnet-az-2", "private-subnet-az-3"]
   database_subnet_ids               = ["db-private-subnet-az-1", "db-private-subnet-az-2", "db-private-subnet-az-3"]
-  database_password_secret_arn      = "mlflow-team-x-db-password-arn"
+  database_password_secret_name      = "mlflow-team-x-db-password-arn"
 }
 ```
 
