@@ -10,6 +10,8 @@ locals {
   mlflow_backend_store_endpoint      = var.database_use_external ? var.database_external_host : aws_rds_cluster.backend_store.0.endpoint
   mlflow_backend_store_port          = var.database_use_external ? var.database_external_port : aws_rds_cluster.backend_store.0.port
   mlflow_backend_store_port_name     = var.database_use_external ? var.database_external_name : aws_rds_cluster.backend_store.0.database_name
+  load_balancer_security_group_id    = var.load_balancer_external_security_group_id ? var.load_balancer_external_security_group_id : aws_security_group.lb.0.id
+  ecs_security_group_id              = var.ecs_external_security_group_id ? var.ecs_external_security_group_id : aws_security_group.ecs_service.0.id
   tags = merge(
     {
       "terraform-module" = "glovo/mlflow/aws"

@@ -62,6 +62,12 @@ variable "ecs_max_instance_count" {
   description = "Maximum number of instances for the ecs cluster."
 }
 
+variable "ecs_external_security_group_id" {
+  type        = string
+  default     = null
+  description = "If you want to use an existing security group for the ECS service instead of creting a new one."
+}
+
 variable "cloudwatch_log_group_external_name" {
   type        = string
   default     = null
@@ -82,6 +88,12 @@ variable "load_balancer_is_internal" {
   type        = bool
   default     = true
   description = "By default, the load balancer is internal. This is because as of v1.9.1, MLflow doesn't have native authentication or authorization. We recommend exposing MLflow behind a VPN or using OIDC/Cognito together with the LB listener."
+}
+
+variable "load_balancer_external_security_group_id" {
+  type        = string
+  default     = null
+  description = "If you want to use an existing security group for the lb instead of creting a new one."
 }
 
 variable "service_subnet_ids" {

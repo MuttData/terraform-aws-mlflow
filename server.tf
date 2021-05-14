@@ -45,24 +45,21 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 }
 
 resource "aws_security_group" "ecs_service" {
-  name = "${var.unique_name}-ecs-service"
-  tags = local.tags
+  count = var.ecs_external_security_group_id ? 0 : 1
+  name  = "${var.unique_name}-ecs-service"
+  tags  = local.tags
 
   vpc_id = var.vpc_id
+}
 
-  ingress {
-    from_port       = local.service_port
-    to_port         = local.service_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lb.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+resource "aws_security_group_rule" "ecs_service_ingress_http" {
+  description              = "Only allow load balancer to reach the ECS service on the right port"
+  type                     = "ingress"
+  from_port                = local.service_port
+  to_port                  = local.service_port
+  protocol                 = "tcp"
+  source_security_group_id = local.load_balancer_security_group_id
+  security_group_id        = local.ecs_security_group_id
 }
 
 resource "aws_cloudwatch_log_group" "mlflow" {
@@ -133,7 +130,7 @@ resource "aws_ecs_service" "mlflow" {
 
   network_configuration {
     subnets         = var.service_subnet_ids
-    security_groups = [aws_security_group.ecs_service.id]
+    security_groups = [local.ecs_security_group_id]
   }
 
   load_balancer {
@@ -167,7 +164,7 @@ resource "aws_launch_template" "mlflow" {
   name                   = "${var.unique_name}-launch-template"
   image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
   instance_type          = var.ec2_template_instance_type
-  vpc_security_group_ids = [aws_security_group.ecs_service.id]
+  vpc_security_group_ids = [local.ecs_security_group_id]
   user_data              = <<EOF
 #!/bin/bash
 # The cluster this agent should check into.
@@ -223,6 +220,7 @@ resource "aws_appautoscaling_target" "mlflow" {
 }
 
 resource "aws_security_group" "lb" {
+  count  = var.load_balancer_external_security_group_id ? 0 : 1
   name   = "${var.unique_name}-lb"
   tags   = local.tags
   vpc_id = var.vpc_id
@@ -235,7 +233,7 @@ resource "aws_security_group_rule" "lb_ingress_http" {
   to_port           = 80
   protocol          = "tcp"
   cidr_blocks       = var.load_balancer_ingress_cidr_blocks
-  security_group_id = aws_security_group.lb.id
+  security_group_id = local.load_balancer_security_group_id
 }
 
 resource "aws_security_group_rule" "lb_ingress_https" {
@@ -245,7 +243,7 @@ resource "aws_security_group_rule" "lb_ingress_https" {
   to_port           = 443
   protocol          = "tcp"
   cidr_blocks       = var.load_balancer_ingress_cidr_blocks
-  security_group_id = aws_security_group.lb.id
+  security_group_id = local.load_balancer_security_group_id
 }
 
 resource "aws_security_group_rule" "lb_egress" {
@@ -254,8 +252,8 @@ resource "aws_security_group_rule" "lb_egress" {
   from_port                = local.service_port
   to_port                  = local.service_port
   protocol                 = "tcp"
-  source_security_group_id = aws_security_group.ecs_service.id
-  security_group_id        = aws_security_group.lb.id
+  source_security_group_id = local.ecs_security_group_id
+  security_group_id        = local.load_balancer_security_group_id
 }
 
 resource "aws_lb" "mlflow" {
@@ -263,7 +261,7 @@ resource "aws_lb" "mlflow" {
   tags               = local.tags
   internal           = var.load_balancer_is_internal ? true : false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.lb.id]
+  security_groups    = [local.load_balancer_security_group_id]
   subnets            = var.load_balancer_subnet_ids
 }
 

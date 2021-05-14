@@ -50,7 +50,7 @@ resource "aws_security_group" "rds" {
     from_port       = local.db_port
     to_port         = local.db_port
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_service.id]
+    security_groups = [local.ecs_security_group_id]
   }
 
   egress {
