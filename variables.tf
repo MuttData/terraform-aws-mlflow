@@ -142,6 +142,12 @@ variable "service_max_capacity" {
   description = "Maximum number of instances for the ecs service. This will create an aws_appautoscaling_target that can later on be used to autoscale the MLflow instance"
 }
 
+variable "service_linked_role_arn" {
+  type = string
+  default = null
+  description = "The ARN of the service-linked role that the ASG will use to call other AWS services. If left empty will use the default AWSServiceRoleForAutoScaling."
+}
+
 variable "mlflow_env_vars" {
   type        = string
   default     = "{}"

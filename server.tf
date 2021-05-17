@@ -183,10 +183,11 @@ resource "aws_launch_template" "mlflow" {
 }
 
 resource "aws_autoscaling_group" "mlflow" {
-  count    = var.ecs_launch_type == "EC2" ? 1 : 0
-  name     = "${var.unique_name}-asg"
-  min_size = var.ecs_min_instance_count
-  max_size = var.ecs_max_instance_count
+  count                   = var.ecs_launch_type == "EC2" ? 1 : 0
+  name                    = "${var.unique_name}-asg"
+  min_size                = var.ecs_min_instance_count
+  max_size                = var.ecs_max_instance_count
+  service_linked_role_arn = var.service_linked_role_arn
   launch_template {
     id      = aws_launch_template.mlflow.0.id
     version = "$Latest"
