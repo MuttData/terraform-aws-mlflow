@@ -180,6 +180,11 @@ resource "aws_launch_template" "mlflow" {
   iam_instance_profile {
     name = var.ec2_instance_profile_name
   }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags   = local.tags
+  }
 }
 
 resource "aws_autoscaling_group" "mlflow" {
