@@ -176,6 +176,7 @@ resource "aws_launch_template" "mlflow" {
   image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
   instance_type          = var.ec2_template_instance_type
   vpc_security_group_ids = [local.ecs_security_group_id]
+  update_default_version = true
   user_data              = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
   iam_instance_profile {
     name = var.ec2_instance_profile_name
