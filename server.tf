@@ -178,7 +178,7 @@ resource "aws_launch_template" "mlflow" {
   vpc_security_group_ids = [local.ecs_security_group_id]
   user_data              = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
   iam_instance_profile {
-    name = "ecsInstanceRole"
+    name = var.ec2_instance_profile_name
   }
 }
 
@@ -190,7 +190,7 @@ resource "aws_autoscaling_group" "mlflow" {
   service_linked_role_arn = var.service_linked_role_arn
   launch_template {
     id      = aws_launch_template.mlflow.0.id
-    version = "$Latest"
+    version = aws_launch_template.mlflow.0.latest_version
   }
   vpc_zone_identifier = var.service_subnet_ids
   tag {

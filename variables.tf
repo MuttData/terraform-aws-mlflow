@@ -44,6 +44,12 @@ variable "ec2_template_instance_type" {
   description = "EC2 template instance type. Mandatory if ecs_launch_type is EC2"
 }
 
+variable "ec2_instance_profile_name" {
+  type        = string
+  default     = null
+  description = " The IAM Instance Profile to launch the instance with."
+}
+
 variable "ecs_service_count" {
   type        = number
   default     = 2
@@ -143,8 +149,8 @@ variable "service_max_capacity" {
 }
 
 variable "service_linked_role_arn" {
-  type = string
-  default = null
+  type        = string
+  default     = null
   description = "The ARN of the service-linked role that the ASG will use to call other AWS services. If left empty will use the default AWSServiceRoleForAutoScaling."
 }
 
