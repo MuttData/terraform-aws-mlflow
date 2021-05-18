@@ -181,6 +181,8 @@ resource "aws_launch_template" "mlflow" {
 
   network_interfaces {
     associate_public_ip_address = true
+    security_groups             = [local.ecs_security_group_id]
+    subnet_id                   = var.load_balancer_subnet_ids.0
   }
   
   iam_instance_profile {
