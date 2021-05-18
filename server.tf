@@ -226,7 +226,7 @@ resource "aws_ecs_capacity_provider" "mlflow" {
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.mlflow.0.arn
-    managed_termination_protection = "ENABLED"
+    managed_termination_protection = "DISABLED"
 
     managed_scaling {
       target_capacity           = 90
