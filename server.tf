@@ -320,6 +320,6 @@ resource "aws_lb_listener" "mlflow" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.0.mlflow.arn
+    target_group_arn = aws_lb_target_group.mlflow.0.arn
   }
 }
