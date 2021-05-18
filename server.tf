@@ -126,7 +126,7 @@ resource "aws_ecs_service" "mlflow" {
   task_definition  = aws_ecs_task_definition.mlflow.arn
   desired_count    = var.ecs_service_count
   launch_type      = var.ecs_launch_type
-  platform_version = "1.4.0"
+  platform_version = var.ecs_launch_type == "EC2" ? null : "1.4.0" 
 
 
   network_configuration {
