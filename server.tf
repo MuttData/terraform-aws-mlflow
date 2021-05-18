@@ -209,7 +209,14 @@ resource "aws_autoscaling_group" "mlflow" {
         propagate_at_launch = true
       }
     ],
-    [local.tags],
+    [
+      for tag_key, tag_value in local.tags:
+      {
+        key = tag_key
+        value = tag_value
+        propagate_at_launch = true
+      }
+    ],
   )
 }
 
