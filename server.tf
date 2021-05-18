@@ -200,11 +200,17 @@ resource "aws_autoscaling_group" "mlflow" {
     version = aws_launch_template.mlflow.0.latest_version
   }
   vpc_zone_identifier = var.service_subnet_ids
-  tag {
-    key                 = "AmazonECSManaged"
-    value               = ""
-    propagate_at_launch = true
-  }
+  
+  tags = concat(
+    [
+      {
+        key                 = "AmazonECSManaged"
+        value               = ""
+        propagate_at_launch = true
+      }
+    ],
+    local.tags,
+  )
 }
 
 resource "aws_ecs_capacity_provider" "mlflow" {
