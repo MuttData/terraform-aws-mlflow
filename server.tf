@@ -175,14 +175,13 @@ resource "aws_launch_template" "mlflow" {
   name                   = "${var.unique_name}-launch-template"
   image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
   instance_type          = var.ec2_template_instance_type
-  vpc_security_group_ids = [local.ecs_security_group_id]
   user_data              = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
   tags                   = local.tags
 
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [local.ecs_security_group_id]
-    subnet_id                   = var.load_balancer_subnet_ids.0
+    subnet_id                   = var.service_subnet_ids.0
   }
   
   iam_instance_profile {
