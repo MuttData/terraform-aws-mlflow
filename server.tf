@@ -146,6 +146,7 @@ resource "aws_ecs_service" "mlflow" {
 
   depends_on = [
     aws_lb.mlflow,
+    aws_lb_listener.mlflow,
   ]
 }
 
@@ -238,6 +239,7 @@ resource "aws_ecs_capacity_provider" "mlflow" {
 }
 
 resource "aws_appautoscaling_target" "mlflow" {
+  count = var.ecs_launch_type == "EC2" ? 1 : 0
   service_namespace  = "ecs"
   resource_id        = "service/${aws_ecs_cluster.mlflow.name}/${aws_ecs_service.mlflow.name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -246,13 +248,14 @@ resource "aws_appautoscaling_target" "mlflow" {
 }
 
 resource "aws_security_group" "lb" {
-  count  = var.load_balancer_external_security_group_id != null ? 0 : 1
+  count  = var.load_balancer_external_security_group_id != null || var.ecs_launch_type != "EC2" ? 0 : 1
   name   = "${var.unique_name}-lb"
   tags   = local.tags
   vpc_id = var.vpc_id
 }
 
 resource "aws_security_group_rule" "lb_ingress_http" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
   description       = "Only allow load balancer to reach the ECS service on the right port"
   type              = "ingress"
   from_port         = 80
@@ -263,6 +266,7 @@ resource "aws_security_group_rule" "lb_ingress_http" {
 }
 
 resource "aws_security_group_rule" "lb_ingress_https" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
   description       = "Only allow load balancer to reach the ECS service on the right port"
   type              = "ingress"
   from_port         = 443
@@ -273,6 +277,7 @@ resource "aws_security_group_rule" "lb_ingress_https" {
 }
 
 resource "aws_security_group_rule" "lb_egress" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
   description              = "Only allow load balancer to reach the ECS service on the right port"
   type                     = "egress"
   from_port                = local.service_port
@@ -283,6 +288,7 @@ resource "aws_security_group_rule" "lb_egress" {
 }
 
 resource "aws_lb" "mlflow" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
   name               = var.unique_name
   tags               = local.tags
   internal           = var.load_balancer_is_internal ? true : false
@@ -292,6 +298,7 @@ resource "aws_lb" "mlflow" {
 }
 
 resource "aws_lb_target_group" "mlflow" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
   name        = var.unique_name
   port        = local.service_port
   protocol    = "HTTP"
@@ -305,3 +312,14 @@ resource "aws_lb_target_group" "mlflow" {
   }
 }
 
+resource "aws_lb_listener" "mlflow" {
+  count  = var.ecs_launch_type != "EC2" ? 0 : 1
+  load_balancer_arn = aws_lb.mlflow.0.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.0.mlflow.arn
+  }
+}
