@@ -135,7 +135,7 @@ resource "aws_ecs_service" "mlflow" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.mlflow.0.arn
+    target_group_arn = aws_lb_target_group.mlflow.arn
     container_name   = "mlflow"
     container_port   = local.service_port
   }
@@ -308,7 +308,7 @@ resource "aws_lb_target_group" "mlflow" {
 
 resource "aws_lb_listener" "mlflow" {
   count  = var.ecs_launch_type != "EC2" ? 0 : 1
-  load_balancer_arn = aws_lb.mlflow.0.arn
+  load_balancer_arn = aws_lb.mlflow.arn
   port              = "80"
   protocol          = "HTTP"
 
