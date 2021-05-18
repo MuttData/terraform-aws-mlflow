@@ -27,23 +27,23 @@ output "service_task_role_id" {
 }
 
 output "service_autoscaling_target_service_namespace" {
-  value = aws_appautoscaling_target.mlflow.service_namespace
+  value = length(aws_appautoscaling_target.mlflow) > 0 ? aws_appautoscaling_target.mlflow.0.service_namespace
 }
 
 output "service_autoscaling_target_resource_id" {
-  value = aws_appautoscaling_target.mlflow.resource_id
+  value = length(aws_appautoscaling_target.mlflow) > 0 ? aws_appautoscaling_target.mlflow.0.resource_id
 }
 
 output "service_autoscaling_target_scalable_dimension" {
-  value = aws_appautoscaling_target.mlflow.scalable_dimension
+  value = length(aws_appautoscaling_target.mlflow) > 0 ? aws_appautoscaling_target.mlflow.0.scalable_dimension
 }
 
 output "service_autoscaling_target_min_capacity" {
-  value = aws_appautoscaling_target.mlflow.min_capacity
+  value = length(aws_appautoscaling_target.mlflow) > 0 ? aws_appautoscaling_target.mlflow.0.min_capacity
 }
 
 output "service_autoscaling_target_max_capacity" {
-  value = aws_appautoscaling_target.mlflow.max_capacity
+  value = length(aws_appautoscaling_target.mlflow) > 0 ? aws_appautoscaling_target.mlflow.0.max_capacity
 }
 
 output "artifact_bucket_id" {
