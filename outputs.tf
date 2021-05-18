@@ -11,7 +11,7 @@ output "load_balancer_zone_id" {
 }
 
 output "load_balancer_dns_name" {
-  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.dns_name : null
+  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.0.dns_name : null
 }
 
 output "cluster_id" {
