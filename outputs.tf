@@ -1,17 +1,17 @@
 output "load_balancer_arn" {
-  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.0.arn
+  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.0.arn : null
 }
 
 output "load_balancer_target_group_id" {
-  value = length(aws_lb_target_group.mlflow) > 0 ? aws_lb_target_group.mlflow.0.id
+  value = length(aws_lb_target_group.mlflow) > 0 ? aws_lb_target_group.mlflow.0.id : null
 }
 
 output "load_balancer_zone_id" {
-  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.0.zone_id
+  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.0.zone_id : null
 }
 
 output "load_balancer_dns_name" {
-  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.dns_name
+  value = length(aws_lb.mlflow) > 0 ? aws_lb.mlflow.dns_name : null
 }
 
 output "cluster_id" {
