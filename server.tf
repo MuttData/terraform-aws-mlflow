@@ -178,6 +178,10 @@ resource "aws_launch_template" "mlflow" {
   vpc_security_group_ids = [local.ecs_security_group_id]
   user_data              = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
   tags                   = local.tags
+
+  network_interfaces {
+    associate_public_ip_address = true
+  }
   
   iam_instance_profile {
     name = var.ec2_instance_profile_name
