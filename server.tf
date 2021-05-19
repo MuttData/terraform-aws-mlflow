@@ -121,12 +121,13 @@ resource "aws_ecs_task_definition" "mlflow" {
 }
 
 resource "aws_ecs_service" "mlflow" {
-  name             = var.unique_name
-  cluster          = aws_ecs_cluster.mlflow.id
-  task_definition  = aws_ecs_task_definition.mlflow.arn
-  desired_count    = var.ecs_service_count
-  launch_type      = var.ecs_launch_type
-  platform_version = var.ecs_launch_type == "EC2" ? null : "1.4.0" 
+  name                              = var.unique_name
+  cluster                           = aws_ecs_cluster.mlflow.id
+  task_definition                   = aws_ecs_task_definition.mlflow.arn
+  desired_count                     = var.ecs_service_count
+  launch_type                       = var.ecs_launch_type
+  platform_version                  = var.ecs_launch_type == "EC2" ? null : "1.4.0"
+  health_check_grace_period_seconds = 30
 
 
   network_configuration {
@@ -171,19 +172,19 @@ EOF
 }
 
 resource "aws_launch_template" "mlflow" {
-  count                  = var.ecs_launch_type == "EC2" ? 1 : 0
-  name                   = "${var.unique_name}-launch-template"
-  image_id               = data.aws_ami.ecs_optimized_ami_linux.0.id
-  instance_type          = var.ec2_template_instance_type
-  user_data              = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
-  tags                   = local.tags
+  count         = var.ecs_launch_type == "EC2" ? 1 : 0
+  name          = "${var.unique_name}-launch-template"
+  image_id      = data.aws_ami.ecs_optimized_ami_linux.0.id
+  instance_type = var.ec2_template_instance_type
+  user_data     = base64encode(data.template_file.mlflow_launch_template_user_data.rendered)
+  tags          = local.tags
 
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [local.ecs_security_group_id]
     subnet_id                   = var.service_subnet_ids.0
   }
-  
+
   iam_instance_profile {
     name = var.ec2_instance_profile_name
   }
@@ -205,7 +206,7 @@ resource "aws_autoscaling_group" "mlflow" {
     version = aws_launch_template.mlflow.0.latest_version
   }
   vpc_zone_identifier = var.service_subnet_ids
-  
+
   tags = concat(
     [
       {
@@ -215,10 +216,10 @@ resource "aws_autoscaling_group" "mlflow" {
       }
     ],
     [
-      for tag_key, tag_value in local.tags:
+      for tag_key, tag_value in local.tags :
       {
-        key = tag_key
-        value = tag_value
+        key                 = tag_key
+        value               = tag_value
         propagate_at_launch = true
       }
     ],
@@ -243,7 +244,7 @@ resource "aws_ecs_capacity_provider" "mlflow" {
 }
 
 resource "aws_appautoscaling_target" "mlflow" {
-  count = var.ecs_launch_type == "EC2" ? 1 : 0
+  count              = var.ecs_launch_type == "EC2" ? 1 : 0
   service_namespace  = "ecs"
   resource_id        = "service/${aws_ecs_cluster.mlflow.name}/${aws_ecs_service.mlflow.name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -312,7 +313,7 @@ resource "aws_lb_target_group" "mlflow" {
 }
 
 resource "aws_lb_listener" "mlflow" {
-  count  = var.ecs_launch_type != "EC2" ? 0 : 1
+  count             = var.ecs_launch_type != "EC2" ? 0 : 1
   load_balancer_arn = aws_lb.mlflow.arn
   port              = "80"
   protocol          = "HTTP"
