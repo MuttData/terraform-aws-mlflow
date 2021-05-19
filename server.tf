@@ -84,13 +84,13 @@ resource "aws_ecs_task_definition" "mlflow" {
   container_definitions = jsonencode(concat([
     {
       name      = "mlflow"
-      image     = "larribas/mlflow:${var.service_image_tag}"
+      image     = var.service_image != null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
       essential = true
 
       # As of version 1.9.1, MLflow doesn't support specifying the backend store uri as an environment variable. ECS doesn't allow evaluating secret environment variables from within the command. Therefore, we are forced to override the entrypoint and assume the docker image has a shell we can use to interpolate the secret at runtime.
       entryPoint = ["sh", "-c"]
       command = [
-        "/bin/sh -c \"pip install gevent && mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=${var.backend_store_uri_engine}://${local.mlflow_backend_store_username}:`echo -n $DB_PASSWORD`@${local.mlflow_backend_store_endpoint}:${local.mlflow_backend_store_port}/${local.mlflow_backend_store_port_name} --gunicorn-opts '${var.gunicorn_opts}' \""
+        "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.service_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=${var.backend_store_uri_engine}://${local.mlflow_backend_store_username}:`echo -n $DB_PASSWORD`@${local.mlflow_backend_store_endpoint}:${local.mlflow_backend_store_port}/${local.mlflow_backend_store_port_name} --gunicorn-opts '${var.gunicorn_opts}' \""
       ]
       portMappings = [{ containerPort = local.service_port }]
       environment  = jsondecode(var.mlflow_env_vars)

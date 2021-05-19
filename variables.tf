@@ -107,6 +107,12 @@ variable "service_subnet_ids" {
   description = "List of subnets where the MLflow ECS service will be deployed (the recommendation is to use subnets that cannot be accessed directly from the Internet)"
 }
 
+variable "service_image" {
+  type        = string
+  default     = null
+  description = "The MLflow docker image to deploy, if not by default it will get https://hub.docker.com/r/larribas/mlflow from the public registry"
+}
+
 variable "service_image_tag" {
   type        = string
   default     = "1.9.1"
