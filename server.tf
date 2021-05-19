@@ -84,7 +84,7 @@ resource "aws_ecs_task_definition" "mlflow" {
   container_definitions = jsonencode(concat([
     {
       name      = "mlflow"
-      image     = var.service_image != null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
+      image     = var.service_image == null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
       essential = true
 
       # As of version 1.9.1, MLflow doesn't support specifying the backend store uri as an environment variable. ECS doesn't allow evaluating secret environment variables from within the command. Therefore, we are forced to override the entrypoint and assume the docker image has a shell we can use to interpolate the secret at runtime.
