@@ -70,12 +70,17 @@ resource "aws_cloudwatch_log_group" "mlflow" {
 }
 
 resource "aws_ecs_cluster" "mlflow" {
-  name               = var.unique_name
-  capacity_providers = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
+  name                = var.unique_name
+  capacity_providers  = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
+  depends_on          = [aws_autoscaling_group.mlflow]
+  tags                = local.tags
+  
   default_capacity_provider_strategy {
     capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"
   }
-  tags = local.tags
+
+  tags                = local.tags
+  depends_on          = [aws_autoscaling_group.mlflow]
 }
 
 resource "aws_ecs_task_definition" "mlflow" {
@@ -296,7 +301,6 @@ resource "aws_lb" "mlflow" {
   load_balancer_type = "application"
   security_groups    = [local.load_balancer_security_group_id]
   subnets            = var.load_balancer_subnet_ids
-  depends_on         = [aws_autoscaling_group.mlflow]
 }
 
 resource "aws_lb_target_group" "mlflow" {
