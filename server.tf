@@ -296,7 +296,7 @@ resource "aws_lb" "mlflow" {
   load_balancer_type = "application"
   security_groups    = [local.load_balancer_security_group_id]
   subnets            = var.load_balancer_subnet_ids
-  depends_on         = aws_autoscaling_group.mlflow
+  depends_on         = [length(aws_autoscaling_group.mlflow) > 0 ? aws_autoscaling_group.mlflow.0 : null]
 }
 
 resource "aws_lb_target_group" "mlflow" {
