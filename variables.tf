@@ -119,6 +119,12 @@ variable "service_image_tag" {
   description = "The MLflow version to deploy. Note that this version has to be available as a tag here: https://hub.docker.com/r/larribas/mlflow"
 }
 
+variable "private_repository_secret" {
+  type        = string
+  default     = null
+  description = "The ARN of the secret that has the credentials to your private image repository."
+}
+
 variable "service_cpu" {
   type        = number
   default     = 2048
