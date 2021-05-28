@@ -106,15 +106,6 @@ resource "aws_ecs_cluster" "mlflow" {
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name "$ASG_NAME" \
             --min-size 0 --max-size 0 --desired-capacity 0
-
-          # Remove scale-in protection from all instances in the asg
-          INSTANCES="$(aws autoscaling describe-auto-scaling-groups \
-            --auto-scaling-group-names "$ASG_NAME" \
-            --query 'AutoScalingGroups[*].Instances[*].InstanceId' \
-            --output text)"
-          aws autoscaling set-instance-protection --instance-ids $INSTANCES \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --no-protected-from-scale-in
         done
       fi
 CMD
