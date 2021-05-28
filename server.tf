@@ -72,11 +72,52 @@ resource "aws_cloudwatch_log_group" "mlflow" {
 resource "aws_ecs_cluster" "mlflow" {
   name                = var.unique_name
   capacity_providers  = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
-  depends_on          = [aws_autoscaling_group.mlflow]
   tags                = local.tags
   
   default_capacity_provider_strategy {
     capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"
+  }
+
+  # We need to terminate all instances before the cluster can be destroyed.
+  # (Terraform would handle this automatically if the autoscaling group depended
+  #  on the cluster, but we need to have the dependency in the reverse
+  #  direction due to the capacity_providers field above).
+  provisioner "local-exec" {
+    when = destroy
+
+    command = <<CMD
+      # Get the list of capacity providers associated with this cluster
+      CAP_PROVS="$(aws ecs describe-clusters --clusters "${self.arn}" \
+        --query 'clusters[*].capacityProviders[*]' --output text)"
+
+      # Now get the list of autoscaling groups from those capacity providers
+      ASG_ARNS="$(aws ecs describe-capacity-providers \
+        --capacity-providers "$CAP_PROVS" \
+        --query 'capacityProviders[*].autoScalingGroupProvider.autoScalingGroupArn' \
+        --output text)"
+
+      if [ -n "$ASG_ARNS" ] && [ "$ASG_ARNS" != "None" ]
+      then
+        for ASG_ARN in $ASG_ARNS
+        do
+          ASG_NAME=$(echo $ASG_ARN | cut -d/ -f2-)
+
+          # Set the autoscaling group size to zero
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --min-size 0 --max-size 0 --desired-capacity 0
+
+          # Remove scale-in protection from all instances in the asg
+          INSTANCES="$(aws autoscaling describe-auto-scaling-groups \
+            --auto-scaling-group-names "$ASG_NAME" \
+            --query 'AutoScalingGroups[*].Instances[*].InstanceId' \
+            --output text)"
+          aws autoscaling set-instance-protection --instance-ids $INSTANCES \
+            --auto-scaling-group-name "$ASG_NAME" \
+            --no-protected-from-scale-in
+        done
+      fi
+CMD
   }
 }
 
