@@ -254,7 +254,7 @@ resource "aws_autoscaling_group" "mlflow" {
       },
       {
         key                 = "Name"
-        value               = "${var.unique_name}"
+        value               = var.unique_name
         propagate_at_launch = true
       }
     ],
