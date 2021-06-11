@@ -70,10 +70,10 @@ resource "aws_cloudwatch_log_group" "mlflow" {
 }
 
 resource "aws_ecs_cluster" "mlflow" {
-  name                = var.unique_name
-  capacity_providers  = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
-  tags                = local.tags
-  
+  name               = var.unique_name
+  capacity_providers = [var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"]
+  tags               = local.tags
+
   default_capacity_provider_strategy {
     capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : "FARGATE"
   }
@@ -117,10 +117,10 @@ resource "aws_ecs_task_definition" "mlflow" {
   tags   = local.tags
   container_definitions = jsonencode(concat([
     {
-      name      = "mlflow"
-      image     = var.service_image == null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
+      name  = "mlflow"
+      image = var.service_image == null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
       repositoryCredentials = {
-        "credentialsParameter": var.private_repository_secret
+        "credentialsParameter" : var.private_repository_secret
       }
 
       essential = true
@@ -278,7 +278,7 @@ resource "aws_ecs_capacity_provider" "mlflow" {
     managed_termination_protection = "DISABLED"
 
     managed_scaling {
-      target_capacity           = 90
+      target_capacity           = 100
       maximum_scaling_step_size = 100
       minimum_scaling_step_size = 1
       status                    = "ENABLED"
