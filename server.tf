@@ -339,6 +339,7 @@ resource "aws_lb" "mlflow" {
   load_balancer_type = "application"
   security_groups    = [local.load_balancer_security_group_id]
   subnets            = var.load_balancer_subnet_ids
+  idle_timeout       = var.load_balancer_idle_timeout
 }
 
 resource "aws_lb_target_group" "mlflow" {

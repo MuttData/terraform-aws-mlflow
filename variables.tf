@@ -85,6 +85,12 @@ variable "load_balancer_subnet_ids" {
   description = "List of subnets where the Load Balancer will be deployed"
 }
 
+variable "load_balancer_idle_timeout" {
+  type        = number
+  default     = 60
+  description = "Load balancer idle timeout in seconds; default: 60 seconds"
+}
+
 variable "load_balancer_ingress_cidr_blocks" {
   type        = list(string)
   description = "CIDR blocks from where to allow traffic to the Load Balancer. With an internal LB, we've left this "
