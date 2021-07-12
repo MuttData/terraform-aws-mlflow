@@ -84,7 +84,7 @@ resource "aws_db_instance" "backend_store" {
   port                    = 5432
   db_subnet_group_name    = aws_db_subnet_group.rds.0.name
   vpc_security_group_ids  = [aws_security_group.rds.0.id]
-  availability_zone       = data.aws_availability_zones.available.names
+  availability_zone       = data.aws_availability_zones.available.names.0
   backup_retention_period = 14
   skip_final_snapshot     = var.database_skip_final_snapshot
 }
