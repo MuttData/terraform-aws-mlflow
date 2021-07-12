@@ -69,33 +69,6 @@ resource "aws_security_group" "rds" {
   }
 }
 
-resource "aws_rds_cluster" "backend_store" {
-  count                     = var.database_use_external ? 0 : 1
-  cluster_identifier_prefix = var.unique_name
-  tags                      = local.tags
-  engine                    = var.database_engine
-  engine_version            = var.database_engine_version
-  engine_mode               = var.database_engine_mode
-  port                      = local.db_port
-  db_subnet_group_name      = aws_db_subnet_group.rds.0.name
-  vpc_security_group_ids    = [aws_security_group.rds.0.id]
-  availability_zones        = data.aws_availability_zones.available.names
-  master_username           = "ecs_task"
-  database_name             = "mlflow"
-  skip_final_snapshot       = var.database_skip_final_snapshot
-  final_snapshot_identifier = var.unique_name
-  master_password           = local.db_password_value
-  backup_retention_period   = 14
-
-  scaling_configuration {
-    max_capacity             = var.database_max_capacity
-    min_capacity             = var.database_min_capacity
-    auto_pause               = var.database_auto_pause
-    seconds_until_auto_pause = var.database_seconds_until_auto_pause
-    timeout_action           = "ForceApplyCapacityChange"
-  }
-}
-
 resource "aws_db_instance" "backend_store" {
   count                   = var.database_use_external ? 0 : 1
   identifier              = "${var.unique_name}-metadata-rds"
