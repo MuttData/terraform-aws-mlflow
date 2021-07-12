@@ -139,7 +139,7 @@ variable "service_cpu" {
 
 variable "service_memory" {
   type        = number
-  default     = 4096
+  default     = 3886
   description = "The amount (in MiB) of memory reserved for the MLflow container"
 }
 
