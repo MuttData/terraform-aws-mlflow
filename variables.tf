@@ -20,16 +20,16 @@ variable "create_iam_roles" {
   description = "By default the module will create all necessary roles, if you want to use existing set this to false."
 }
 
-variable "ecs_task_role_arn" {
+variable "ecs_task_role_name" {
   type        = string
   default     = null
-  description = "ECS task role ARN."
+  description = "ECS task role name."
 }
 
-variable "ecs_execution_role_arn" {
+variable "ecs_execution_role_name" {
   type        = string
   default     = null
-  description = "ECS execution role ARN."
+  description = "ECS execution role name."
 }
 
 variable "ecs_launch_type" {

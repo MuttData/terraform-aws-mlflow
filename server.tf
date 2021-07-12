@@ -19,6 +19,11 @@ resource "aws_iam_role" "ecs_task" {
   })
 }
 
+data "aws_iam_role" "ecs_task" {
+  count = var.create_iam_roles ? 0 : 1
+  name  = var.ecs_task_role_name
+}
+
 resource "aws_iam_role" "ecs_execution" {
   count = var.create_iam_roles ? 1 : 0
   name  = "${var.unique_name}-ecs-execution"
@@ -36,6 +41,16 @@ resource "aws_iam_role" "ecs_execution" {
       },
     ]
   })
+}
+
+data "aws_iam_role" "ecs_execution" {
+  count = var.create_iam_roles ? 0 : 1
+  name  = var.ecs_execution_role_name
+}
+
+resource "aws_iam_service_linked_role" "ecs" {
+  count            = var.create_iam_roles ? 1 : 0
+  aws_service_name = "ecs.amazonaws.com"
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution" {
@@ -126,9 +141,9 @@ resource "aws_ecs_task_definition" "mlflow" {
     {
       name  = "mlflow"
       image = var.service_image == null ? "larribas/mlflow:${var.service_image_tag}" : var.service_image
-      repositoryCredentials = {
+      repositoryCredentials = var.private_repository_secret != null ? {
         "credentialsParameter" : var.private_repository_secret
-      }
+      } : null
 
       essential = true
 

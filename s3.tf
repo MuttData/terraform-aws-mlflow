@@ -36,7 +36,7 @@ resource "aws_s3_bucket" "default" {
 resource "aws_iam_role_policy" "default_bucket" {
   count       = local.create_dedicated_bucket ? 1 : 0
   name_prefix = "access_to_default_bucket"
-  role        = local.ecs_task_role_arn
+  role        = local.ecs_task_role_name
 
   policy = jsonencode({
     Version = "2012-10-17"
