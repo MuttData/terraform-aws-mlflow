@@ -5,8 +5,8 @@ locals {
   artifact_bucket_id                 = local.create_dedicated_bucket ? aws_s3_bucket.default.0.id : var.artifact_bucket_id
   ecs_execution_role_name            = var.create_iam_roles ? aws_iam_role.ecs_execution.0.name : var.ecs_execution_role_name
   ecs_task_role_name                 = var.create_iam_roles ? aws_iam_role.ecs_task.0.name : var.ecs_task_role_name
-  ecs_execution_role_arn             = var.create_iam_roles ? aws_iam_role.ecs_execution.0.name : data.aws_iam_role.ecs_execution.0.arn
-  ecs_task_role_arn                  = var.create_iam_roles ? aws_iam_role.ecs_task.0.name : data.aws_iam_role.ecs_task.0.arn
+  ecs_execution_role_arn             = var.create_iam_roles ? aws_iam_role.ecs_execution.0.arn : data.aws_iam_role.ecs_execution.0.arn
+  ecs_task_role_arn                  = var.create_iam_roles ? aws_iam_role.ecs_task.0.arn : data.aws_iam_role.ecs_task.0.arn
   cloudwatch_log_group_external_name = var.cloudwatch_log_group_external_name != null ? var.cloudwatch_log_group_external_name : aws_cloudwatch_log_group.mlflow.0.name
   mlflow_backend_store_username      = var.database_use_external ? var.database_external_username : aws_db_instance.backend_store.0.username
   mlflow_backend_store_endpoint      = var.database_use_external ? var.database_external_host : aws_db_instance.backend_store.0.endpoint
