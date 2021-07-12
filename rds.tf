@@ -45,6 +45,7 @@ resource "aws_db_subnet_group" "rds" {
   count      = var.database_use_external ? 0 : 1
   name       = "${var.unique_name}-rds"
   subnet_ids = var.database_subnet_ids
+  tags       = local.tags
 }
 
 resource "aws_security_group" "rds" {
@@ -93,4 +94,24 @@ resource "aws_rds_cluster" "backend_store" {
     seconds_until_auto_pause = var.database_seconds_until_auto_pause
     timeout_action           = "ForceApplyCapacityChange"
   }
+}
+
+resource "aws_db_instance" "backend_store" {
+  count                   = var.database_use_external ? 0 : 1
+  identifier              = "${var.unique_name}-metadata-rds"
+  allocated_storage       = var.rds_allocated_storage
+  max_allocated_storage   = var.rds_max_allocated_storage
+  tags                    = local.tags
+  name                    = "mlflow"
+  engine                  = var.database_engine
+  engine_version          = var.database_engine_version
+  username                = "mlflow"
+  master_password         = local.db_password_value
+  instance_class          = local.rds_instance_type
+  port                    = 5432
+  db_subnet_group_name    = aws_db_subnet_group.rds.0.name
+  vpc_security_group_ids  = [aws_security_group.rds.0.id]
+  availability_zone       = data.aws_availability_zones.available.names
+  backup_retention_period = 14
+  skip_final_snapshot     = var.database_skip_final_snapshot
 }

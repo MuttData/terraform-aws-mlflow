@@ -210,20 +210,14 @@ variable "database_external_name" {
 
 variable "database_engine" {
   type        = string
-  default     = "aurora-mysql"
-  description = "Database engine, default 'aurora-mysql'."
+  default     = "postgres"
+  description = "Database engine, default 'postgres'."
 }
 
 variable "database_engine_version" {
   type        = string
-  default     = "5.7.mysql_aurora.2.07.1"
-  description = "Database version, default '5.7.mysql_aurora.2.07.1'."
-}
-
-variable "database_engine_mode" {
-  type        = string
-  default     = "serverless"
-  description = "Database engine mode, default 'serverless'."
+  default     = "12.5"
+  description = "Database version, default '12.5'."
 }
 
 variable "database_port" {
@@ -249,39 +243,25 @@ variable "database_password_secret_is_parameter_store" {
   description = "Specifies if your database password secret is stored in the parameter store, by default false and we assume it is in the secrets manager"
 }
 
-variable "database_min_capacity" {
-  type        = number
-  default     = 1
-  description = "The minimum capacity for the Aurora Serverless cluster. Aurora will scale automatically in this range. See: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html"
-}
-
-variable "database_max_capacity" {
-  type        = number
-  default     = 1
-  description = "The maximum capacity for the Aurora Serverless cluster. Aurora will scale automatically in this range. See: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html"
-}
-
-variable "database_auto_pause" {
-  type        = bool
-  default     = true
-  description = "Pause Aurora Serverless after a given amount of time with no activity. https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.pause-resume"
-}
-
-variable "database_seconds_until_auto_pause" {
-  type        = number
-  default     = 300
-  description = "The number of seconds without activity before Aurora Serverless is paused. https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.pause-resume"
-}
-
 variable "database_skip_final_snapshot" {
   type    = bool
   default = false
 }
+variable "rds_allocated_storage" {
+  type        = number
+  default     = 10
+  description = "RDS intial allocated storage."
+}
+variable "rds_max_allocated_storage" {
+  type        = number
+  default     = 50
+  description = "RDS max allocated storage for storage autoscaling."
+}
 
 variable "backend_store_uri_engine" {
   type        = string
-  default     = "mysql+pymysql"
-  description = "Mlflow backend store uri engine to use. Default: mysql+pymysql."
+  default     = "postgresql+psycopg2"
+  description = "Mlflow backend store uri engine to use. Default: postgresql+psycopg2."
 }
 
 variable "artifact_bucket_id" {
