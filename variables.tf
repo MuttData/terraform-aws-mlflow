@@ -247,6 +247,11 @@ variable "database_skip_final_snapshot" {
   type    = bool
   default = false
 }
+variable "rds_instance_type" {
+  type        = string
+  default     = "db.t3.medium"
+  description = "RDS instance type for metadata."
+}
 variable "rds_allocated_storage" {
   type        = number
   default     = 10

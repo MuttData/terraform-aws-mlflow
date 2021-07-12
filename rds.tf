@@ -79,8 +79,8 @@ resource "aws_db_instance" "backend_store" {
   engine                  = var.database_engine
   engine_version          = var.database_engine_version
   username                = "mlflow"
-  master_password         = local.db_password_value
-  instance_class          = local.rds_instance_type
+  password                = local.db_password_value
+  instance_class          = var.rds_instance_type
   port                    = 5432
   db_subnet_group_name    = aws_db_subnet_group.rds.0.name
   vpc_security_group_ids  = [aws_security_group.rds.0.id]
