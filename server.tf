@@ -49,6 +49,13 @@ resource "aws_security_group" "ecs_service" {
   name  = "${var.unique_name}-ecs-service"
   tags  = local.tags
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   vpc_id = var.vpc_id
 }
 
