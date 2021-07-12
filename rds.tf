@@ -41,7 +41,7 @@ resource "aws_iam_role_policy" "db_secrets" {
   })
 }
 
-resource "aws_iam_role_policy" "db_secrets" {
+resource "aws_iam_role_policy" "db_parameters" {
   count = var.database_use_external || !var.database_password_secret_is_parameter_store ? 0 : 1
   name  = "${var.unique_name}-read-db-pass-secret"
   role  = local.ecs_execution_role_name
