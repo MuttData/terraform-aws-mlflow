@@ -327,7 +327,7 @@ resource "aws_lb" "mlflow" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  count             = var.load_balancer_listen_https && !var.load_balancer_ssl_cert_arn ? 1 : 0
+  count             = var.load_balancer_listen_https && var.load_balancer_ssl_cert_arn == null ? 1 : 0
   domain_name       = aws_lb.mlflow.dns_name
   validation_method = "DNS"
 
