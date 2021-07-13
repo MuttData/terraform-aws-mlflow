@@ -365,7 +365,7 @@ resource "aws_lb_listener" "mlflow" {
 }
 
 resource "aws_lb_listener" "mlflow_https" {
-  count             = var.ecs_launch_type != "EC2" && var.load_balancer_listen_https ? 1 : 0
+  count             = var.ecs_launch_type == "EC2" && var.load_balancer_listen_https ? 1 : 0
   load_balancer_arn = aws_lb.mlflow.arn
   port              = "443"
   protocol          = "HTTPS"
