@@ -222,8 +222,8 @@ variable "database_engine_version" {
 
 variable "database_port" {
   type        = string
-  default     = 3306
-  description = "Database port, default 3306 (MySQL)."
+  default     = 5432
+  description = "Database port, default 5432 (Potgres)."
 }
 
 variable "database_subnet_ids" {
