@@ -108,6 +108,18 @@ variable "load_balancer_external_security_group_id" {
   description = "If you want to use an existing security group for the lb instead of creting a new one."
 }
 
+variable "load_balancer_listen_https" {
+  type        = bool
+  default     = false
+  description = "If you want the load balancer to support HTTPS."
+}
+
+variable "load_balancer_ssl_cert_arn" {
+  type        = string
+  default     = null
+  description = "If you want the load balancer to support HTTPS, the SSL certificate to use."
+}
+
 variable "service_subnet_ids" {
   type        = list(string)
   description = "List of subnets where the MLflow ECS service will be deployed (the recommendation is to use subnets that cannot be accessed directly from the Internet)"

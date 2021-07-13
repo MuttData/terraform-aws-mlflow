@@ -326,6 +326,18 @@ resource "aws_lb" "mlflow" {
   idle_timeout       = var.load_balancer_idle_timeout
 }
 
+resource "aws_acm_certificate" "cert" {
+  count             = var.load_balancer_listen_https && !var.load_balancer_ssl_cert_arn ? 1 : 0
+  domain_name       = aws_lb.mlflow.dns_name
+  validation_method = "DNS"
+
+  tags = local.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_lb_target_group" "mlflow" {
   name        = var.unique_name
   port        = local.service_port
@@ -345,6 +357,20 @@ resource "aws_lb_listener" "mlflow" {
   load_balancer_arn = aws_lb.mlflow.arn
   port              = "80"
   protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.mlflow.arn
+  }
+}
+
+resource "aws_lb_listener" "mlflow_https" {
+  count             = var.ecs_launch_type != "EC2" && var.load_balancer_listen_https ? 1 : 0
+  load_balancer_arn = aws_lb.mlflow.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.load_balancer_ssl_cert_arn ? var.load_balancer_ssl_cert_arn : aws_acm_certificate.cert.0.arn
 
   default_action {
     type             = "forward"
