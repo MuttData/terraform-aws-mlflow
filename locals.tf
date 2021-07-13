@@ -1,5 +1,6 @@
 locals {
   service_port                       = 80
+  mlflow_port                        = var.service_use_nginx_basic_auth ? 5000 : local.service_port
   db_port                            = var.database_port
   create_dedicated_bucket            = var.artifact_bucket_id == null
   artifact_bucket_id                 = local.create_dedicated_bucket ? aws_s3_bucket.default.0.id : var.artifact_bucket_id

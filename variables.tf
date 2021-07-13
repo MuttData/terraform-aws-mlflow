@@ -172,6 +172,17 @@ variable "service_linked_role_arn" {
   description = "The ARN of the service-linked role that the ASG will use to call other AWS services. If left empty will use the default AWSServiceRoleForAutoScaling."
 }
 
+variable "service_use_nginx_basic_auth" {
+  type        = bool
+  default     = false
+  description = "If to use an nginx server ahead of Mlflow with basic auth."
+}
+
+variable "service_nginx_basic_auth_image" {
+  type        = string
+  description = "Image to use for the nginx server."
+}
+
 variable "mlflow_env_vars" {
   type        = string
   default     = "{}"
