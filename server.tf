@@ -381,5 +381,5 @@ resource "aws_lb_listener" "mlflow_https" {
 resource "aws_lb_listener_certificate" "mlflow_https_cert" {
   count           = var.ecs_launch_type == "EC2" && var.load_balancer_listen_https ? 1 : 0
   listener_arn    = aws_lb_listener.mlflow_https.0.arn
-  certificate_arn = var.load_balancer_ssl_cert_arn ? var.load_balancer_ssl_cert_arn : aws_acm_certificate.cert.0.arn
+  certificate_arn = var.load_balancer_ssl_cert_arn != null ? var.load_balancer_ssl_cert_arn : aws_acm_certificate.cert.0.arn
 }
