@@ -335,7 +335,7 @@ resource "aws_lb_target_group" "mlflow" {
 
   health_check {
     protocol = "HTTP"
-    matcher  = var.service_use_nginx_basic_auth ? "404" : "200-202"
+    matcher  = "200-202"
     path     = "/health"
   }
 }
