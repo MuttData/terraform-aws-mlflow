@@ -155,7 +155,7 @@ resource "aws_ecs_service" "mlflow" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.mlflow.arn
-    container_name   = "mlflow"
+    container_name   = var.service_use_nginx_basic_auth ? "nginx" : "mlflow"
     container_port   = local.service_port
   }
 
