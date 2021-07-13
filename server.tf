@@ -1,5 +1,35 @@
 data "aws_region" "current" {}
 
+resource "random_password" "mlflow_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+}
+resource "aws_ssm_parameter" "mlflow_password" {
+  name  = "${var.unique_name}-mlflow-password"
+  type  = "SecureString"
+  value = random_password.mlflow_password.result
+  tags  = local.tags
+}
+resource "aws_iam_role_policy" "mlflow_parameters" {
+  name = "${var.unique_name}-read-mlflow-pass-secret"
+  role = local.ecs_execution_role_name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameters"
+        ]
+        Resource = [
+          aws_ssm_parameter.mlflow_password.arn
+        ]
+      },
+    ]
+  })
+}
 resource "aws_security_group" "ecs_service" {
   count = var.ecs_external_security_group_id != null ? 0 : 1
   name  = "${var.unique_name}-ecs-service"
@@ -94,11 +124,20 @@ resource "aws_ecs_task_definition" "mlflow" {
         "/bin/sh -c \"mlflow server --host=0.0.0.0 --port=${local.mlflow_port} --default-artifact-root=s3://${local.artifact_bucket_id}${var.artifact_bucket_path} --backend-store-uri=${var.backend_store_uri_engine}://${local.mlflow_backend_store_username}:`echo -n $DB_PASSWORD`@${local.mlflow_backend_store_endpoint}:${local.mlflow_backend_store_port}/${local.mlflow_backend_store_port_name} --gunicorn-opts '${var.gunicorn_opts}' \""
       ]
       portMappings = [{ containerPort = local.mlflow_port }]
-      environment  = jsondecode(var.mlflow_env_vars)
+      environment = concat([
+        {
+          name  = "MLFLOW_TRACKING_USERNAME"
+          value = "mlflow"
+        }
+      ], jsondecode(var.mlflow_env_vars))
       secrets = [
         {
           name      = "DB_PASSWORD"
           valueFrom = local.db_password_arn
+        },
+        {
+          name      = "MLFLOW_TRACKING_PASSWORD"
+          valueFrom = aws_ssm_parameter.mlflow_password.arn
         },
       ]
       logConfiguration = {
@@ -118,7 +157,18 @@ resource "aws_ecs_task_definition" "mlflow" {
       essential = true
 
       portMappings = [{ containerPort = local.service_port }]
-      environment  = jsondecode(var.mlflow_env_vars)
+      environment = concat([
+        {
+          name  = "MLFLOW_TRACKING_USERNAME"
+          value = "mlflow"
+        }
+      ], jsondecode(var.mlflow_env_vars))
+      secrets = [
+        {
+          name      = "MLFLOW_TRACKING_PASSWORD"
+          valueFrom = aws_ssm_parameter.mlflow_password.arn
+        },
+      ]
       logConfiguration = {
         logDriver     = "awslogs"
         secretOptions = null
@@ -326,18 +376,6 @@ resource "aws_lb" "mlflow" {
   idle_timeout       = var.load_balancer_idle_timeout
 }
 
-resource "aws_acm_certificate" "cert" {
-  count             = var.load_balancer_listen_https && var.load_balancer_ssl_cert_arn == null ? 1 : 0
-  domain_name       = aws_lb.mlflow.dns_name
-  validation_method = "DNS"
-
-  tags = local.tags
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 resource "aws_lb_target_group" "mlflow" {
   name        = var.unique_name
   port        = local.service_port
@@ -370,16 +408,11 @@ resource "aws_lb_listener" "mlflow_https" {
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.load_balancer_ssl_cert_arn
   depends_on        = [aws_lb_target_group.mlflow]
 
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.mlflow.arn
   }
-}
-
-resource "aws_lb_listener_certificate" "mlflow_https_cert" {
-  count           = var.ecs_launch_type == "EC2" && var.load_balancer_listen_https ? 1 : 0
-  listener_arn    = aws_lb_listener.mlflow_https.0.arn
-  certificate_arn = var.load_balancer_ssl_cert_arn != null ? var.load_balancer_ssl_cert_arn : aws_acm_certificate.cert.0.arn
 }
