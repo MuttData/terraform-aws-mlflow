@@ -1,19 +1,22 @@
 data "aws_region" "current" {}
 
 resource "random_password" "mlflow_password" {
+  count            = var.mlflow_generate_random_pass ? 1 : 0
   length           = 16
   special          = true
   override_special = "_%@"
 }
 resource "aws_ssm_parameter" "mlflow_password" {
+  count = var.mlflow_generate_random_pass ? 1 : 0
   name  = "${var.unique_name}-mlflow-password"
   type  = "SecureString"
-  value = random_password.mlflow_password.result
+  value = random_password.mlflow_password.0.result
   tags  = local.tags
 }
 resource "aws_iam_role_policy" "mlflow_parameters" {
-  name = "${var.unique_name}-read-mlflow-pass-secret"
-  role = local.ecs_execution_role_name
+  count = var.mlflow_generate_random_pass ? 1 : 0
+  name  = "${var.unique_name}-read-mlflow-pass-secret"
+  role  = local.ecs_execution_role_name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -24,7 +27,7 @@ resource "aws_iam_role_policy" "mlflow_parameters" {
           "ssm:GetParameters"
         ]
         Resource = [
-          aws_ssm_parameter.mlflow_password.arn
+          aws_ssm_parameter.mlflow_password.0.arn
         ]
       },
     ]
@@ -129,17 +132,21 @@ resource "aws_ecs_task_definition" "mlflow" {
           name  = "MLFLOW_TRACKING_USERNAME"
           value = "mlflow"
         }
-      ], jsondecode(var.mlflow_env_vars))
-      secrets = [
+        ], !var.mlflow_generate_random_pass ? [
+        {
+          name  = "MLFLOW_TRACKING_PASSWORD"
+          value = var.mlflow_pass
+        }
+      ] : [], jsondecode(var.mlflow_env_vars))
+      secrets = concat([
         {
           name      = "DB_PASSWORD"
           valueFrom = local.db_password_arn
-        },
-        {
+        }],
+        var.mlflow_generate_random_pass ? [{
           name      = "MLFLOW_TRACKING_PASSWORD"
-          valueFrom = aws_ssm_parameter.mlflow_password.arn
-        },
-      ]
+          valueFrom = aws_ssm_parameter.mlflow_password.0.arn
+      }] : [])
       logConfiguration = {
         logDriver     = "awslogs"
         secretOptions = null
@@ -162,13 +169,21 @@ resource "aws_ecs_task_definition" "mlflow" {
           name  = "MLFLOW_TRACKING_USERNAME"
           value = "mlflow"
         }
-      ], jsondecode(var.mlflow_env_vars))
-      secrets = [
+        ], !var.mlflow_generate_random_pass ? [
         {
+          name  = "MLFLOW_TRACKING_PASSWORD"
+          value = var.mlflow_pass
+        }
+      ] : [], jsondecode(var.mlflow_env_vars))
+      secrets = concat([
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = local.db_password_arn
+        }],
+        var.mlflow_generate_random_pass ? [{
           name      = "MLFLOW_TRACKING_PASSWORD"
-          valueFrom = aws_ssm_parameter.mlflow_password.arn
-        },
-      ]
+          valueFrom = aws_ssm_parameter.mlflow_password.0.arn
+      }] : [])
       logConfiguration = {
         logDriver     = "awslogs"
         secretOptions = null
@@ -193,10 +208,24 @@ resource "aws_ecs_service" "mlflow" {
   cluster                           = aws_ecs_cluster.mlflow.id
   task_definition                   = aws_ecs_task_definition.mlflow.arn
   desired_count                     = var.ecs_service_count
-  launch_type                       = var.ecs_launch_type
+  launch_type                       = var.ecs_launch_type == "EC2" ? null : var.ecs_launch_type
   platform_version                  = var.ecs_launch_type == "EC2" ? null : "1.4.0"
   health_check_grace_period_seconds = 30
 
+  capacity_provider_strategy {
+    base              = 0
+    capacity_provider = var.ecs_launch_type == "EC2" ? aws_ecs_capacity_provider.mlflow.0.name : null
+    weight            = 1
+  }
+
+  deployment_circuit_breaker {
+    enable   = false
+    rollback = false
+  }
+
+  deployment_controller {
+    type = "ECS"
+  }
 
   network_configuration {
     subnets         = var.service_subnet_ids

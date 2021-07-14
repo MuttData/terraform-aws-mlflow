@@ -192,6 +192,7 @@ variable "service_use_nginx_basic_auth" {
 
 variable "service_nginx_basic_auth_image" {
   type        = string
+  default     = null
   description = "Image to use for the nginx server."
 }
 
@@ -199,6 +200,18 @@ variable "mlflow_env_vars" {
   type        = string
   default     = "{}"
   description = "Mlflow environment variables to inject in the container"
+}
+
+variable "mlflow_generate_random_pass" {
+  type        = bool
+  default     = false
+  description = "If you want a random password to be generated for mlflow, or you'll inject one."
+}
+
+variable "mlflow_pass" {
+  type        = string
+  default     = "mlflow"
+  description = "Mlflow tracking password."
 }
 
 variable "database_use_external" {

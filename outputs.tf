@@ -18,6 +18,10 @@ output "cluster_id" {
   value = aws_ecs_cluster.mlflow.id
 }
 
+output "capacity_provider_name" {
+  value = length(aws_ecs_capacity_provider.mlflow) > 0 ? aws_ecs_capacity_provider.mlflow.0.name : null
+}
+
 output "service_execution_role_id" {
   value = length(aws_iam_role.ecs_execution) > 0 ? aws_iam_role.ecs_execution.0.id : null
 }
