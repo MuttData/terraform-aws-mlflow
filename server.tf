@@ -175,15 +175,10 @@ resource "aws_ecs_task_definition" "mlflow" {
           value = var.mlflow_pass
         }
       ] : [], jsondecode(var.mlflow_env_vars))
-      secrets = concat([
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = local.db_password_arn
-        }],
-        var.mlflow_generate_random_pass ? [{
+      secrets = var.mlflow_generate_random_pass ? [{
           name      = "MLFLOW_TRACKING_PASSWORD"
           valueFrom = aws_ssm_parameter.mlflow_password.0.arn
-      }] : [])
+      }]
       logConfiguration = {
         logDriver     = "awslogs"
         secretOptions = null
