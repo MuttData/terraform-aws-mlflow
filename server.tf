@@ -249,7 +249,7 @@ data "aws_ami" "ecs_optimized_ami_linux" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-*-amazon-ecs-optimized"]
+    values = ["amzn-ami-2018.03.20210519-amazon-ecs-optimized"]
   }
 }
 
@@ -298,6 +298,10 @@ resource "aws_autoscaling_group" "mlflow" {
     version = aws_launch_template.mlflow.0.latest_version
   }
   vpc_zone_identifier = var.service_subnet_ids
+
+  lifecycle {
+    ignore_changes = [force_delete_warm_pool]
+  }
 
   tags = concat(
     [
