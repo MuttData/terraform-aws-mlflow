@@ -93,7 +93,14 @@ variable "load_balancer_idle_timeout" {
 
 variable "load_balancer_ingress_cidr_blocks" {
   type        = list(string)
-  description = "CIDR blocks from where to allow traffic to the Load Balancer. With an internal LB, we've left this "
+  default     = null
+  description = "CIDR blocks from where to allow traffic to the Load Balancer. If this is null, load_balancer_ingress_sg_id must be set."
+}
+
+variable "load_balancer_ingress_sg_id" {
+  type        = string
+  default     = null
+  description = "Security group from where to allow traffic to the Load Balancer. If this is null, load_balancer_ingress_cidr_blocks must be set."
 }
 
 variable "load_balancer_is_internal" {

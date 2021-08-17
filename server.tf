@@ -361,23 +361,25 @@ resource "aws_security_group" "lb" {
 }
 
 resource "aws_security_group_rule" "lb_ingress_http" {
-  description       = "Only allow load balancer to reach the ECS service on the right port"
-  type              = "ingress"
-  from_port         = 80
-  to_port           = 80
-  protocol          = "tcp"
-  cidr_blocks       = var.load_balancer_ingress_cidr_blocks
-  security_group_id = local.load_balancer_security_group_id
+  description              = "Only allow load balancer to reach the ECS service on the right port"
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  cidr_blocks              = var.load_balancer_ingress_cidr_blocks
+  source_security_group_id = var.load_balancer_ingress_sg_id
+  security_group_id        = local.load_balancer_security_group_id
 }
 
 resource "aws_security_group_rule" "lb_ingress_https" {
-  description       = "Only allow load balancer to reach the ECS service on the right port"
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  cidr_blocks       = var.load_balancer_ingress_cidr_blocks
-  security_group_id = local.load_balancer_security_group_id
+  description              = "Only allow load balancer to reach the ECS service on the right port"
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  cidr_blocks              = var.load_balancer_ingress_cidr_blocks
+  source_security_group_id = var.load_balancer_ingress_sg_id
+  security_group_id        = local.load_balancer_security_group_id
 }
 
 resource "aws_security_group_rule" "lb_egress" {
