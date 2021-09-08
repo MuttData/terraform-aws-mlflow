@@ -14,6 +14,45 @@ variable "vpc_id" {
   description = "AWS VPC to deploy MLflow into"
 }
 
+variable "launch_in_existing_cluster" {
+  type        = bool
+  default     = false
+  description = "If you want to launch a new mlflow instance in an existing ECS cluster"
+}
+
+variable "existing_cluster_id" {
+  type        = string
+  default     = null
+  description = "Existing ECS cluster id"
+}
+
+variable "existing_lb_listener_arn" {
+  type        = string
+  default     = null
+  description = "Existing ECS load balancer listener ARN"
+}
+
+variable "existing_lb_target_group_arn" {
+  type        = string
+  default     = null
+  description = "Existing ECS load balancer target group ARN"
+}
+
+variable "existing_capacity_provider_name" {
+  type        = string
+  default     = null
+  description = "Existing ECS capacity provider name"
+}
+
+variable "existing_service_execution_role_id" {
+  type    = string
+  default = null
+}
+variable "existing_service_task_role_id" {
+  type    = string
+  default = null
+}
+
 variable "create_iam_roles" {
   type        = bool
   default     = true
@@ -74,6 +113,11 @@ variable "ecs_external_security_group_id" {
   description = "If you want to use an existing security group for the ECS service instead of creting a new one."
 }
 
+variable "ecs_subnet_ids" {
+  type        = list(string)
+  description = "List of subnets where the ECS cluster instances will be deployed"
+}
+
 variable "cloudwatch_log_group_external_name" {
   type        = string
   default     = null
@@ -127,15 +171,21 @@ variable "load_balancer_ssl_cert_arn" {
   description = "If you want the load balancer to support HTTPS, the SSL certificate to use."
 }
 
-variable "service_subnet_ids" {
-  type        = list(string)
-  description = "List of subnets where the MLflow ECS service will be deployed (the recommendation is to use subnets that cannot be accessed directly from the Internet)"
+variable "load_balancer_host_header" {
+  type        = string
+  default     = null
+  description = "If you want to listen to a specific host header."
 }
 
 variable "service_image" {
   type        = string
   default     = null
   description = "The MLflow docker image to deploy, if not by default it will get https://hub.docker.com/r/larribas/mlflow from the public registry"
+}
+
+variable "service_subnet_ids" {
+  type        = list(string)
+  description = "List of subnets where the MLflow ECS service will be deployed (the recommendation is to use subnets that cannot be accessed directly from the Internet)"
 }
 
 variable "service_image_tag" {

@@ -66,14 +66,14 @@ resource "aws_db_subnet_group" "rds" {
   count      = var.database_use_external ? 0 : 1
   name       = "${var.unique_name}-rds"
   subnet_ids = var.database_subnet_ids
-  tags       = local.tags
+  tags       = var.tags
 }
 
 resource "aws_security_group" "rds" {
   count  = var.database_use_external ? 0 : 1
   name   = "${var.unique_name}-rds"
   vpc_id = var.vpc_id
-  tags   = local.tags
+  tags   = var.tags
 
   ingress {
     from_port       = local.db_port
@@ -95,7 +95,7 @@ resource "aws_db_instance" "backend_store" {
   identifier              = "${var.unique_name}-metadata-rds"
   allocated_storage       = var.rds_allocated_storage
   max_allocated_storage   = var.rds_max_allocated_storage
-  tags                    = local.tags
+  tags                    = var.tags
   name                    = "mlflow"
   engine                  = var.database_engine
   engine_version          = var.database_engine_version

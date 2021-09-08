@@ -1,33 +1,45 @@
 output "load_balancer_arn" {
-  value = aws_lb.mlflow.arn
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.load_balancer_arn
 }
 
 output "load_balancer_target_group_id" {
-  value = aws_lb_target_group.mlflow.id
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.load_balancer_target_group_id
+}
+
+output "load_balancer_target_group_arn" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.aws_lb_target_group_arn
 }
 
 output "load_balancer_zone_id" {
-  value = aws_lb.mlflow.zone_id
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.load_balancer_zone_id
+}
+
+output "load_balancer_listener_arn" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.aws_lb_listener_arn
 }
 
 output "load_balancer_dns_name" {
-  value = aws_lb.mlflow.dns_name
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.load_balancer_dns_name
 }
 
 output "cluster_id" {
-  value = aws_ecs_cluster.mlflow.id
+  value = var.launch_in_existing_cluster ? var.existing_cluster_id : module.ecs_cluster.0.ecs_cluster_id
+}
+
+output "ecs_security_group_id" {
+  value = local.ecs_security_group_id
 }
 
 output "capacity_provider_name" {
-  value = length(aws_ecs_capacity_provider.mlflow) > 0 ? aws_ecs_capacity_provider.mlflow.0.name : null
+  value = var.launch_in_existing_cluster ? var.existing_capacity_provider_name : module.ecs_cluster.0.capacity_provider_name
 }
 
 output "service_execution_role_id" {
-  value = length(aws_iam_role.ecs_execution) > 0 ? aws_iam_role.ecs_execution.0.id : null
+  value = var.launch_in_existing_cluster ? var.existing_service_execution_role_id : module.ecs_cluster.0.service_execution_role_id
 }
 
 output "service_task_role_id" {
-  value = length(aws_iam_role.ecs_task) > 0 ? aws_iam_role.ecs_task.0.id : null
+  value = var.launch_in_existing_cluster ? var.existing_service_task_role_id : module.ecs_cluster.0.service_task_role_id
 }
 
 output "service_autoscaling_target_service_namespace" {

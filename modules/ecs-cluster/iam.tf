@@ -1,7 +1,7 @@
 resource "aws_iam_role" "ecs_task" {
   count = var.create_iam_roles ? 1 : 0
   name  = "${var.unique_name}-ecs-task"
-  tags  = local.tags
+  tags  = var.tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,7 +25,7 @@ data "aws_iam_role" "ecs_task" {
 resource "aws_iam_role" "ecs_execution" {
   count = var.create_iam_roles ? 1 : 0
   name  = "${var.unique_name}-ecs-execution"
-  tags  = local.tags
+  tags  = var.tags
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
