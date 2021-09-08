@@ -11,6 +11,7 @@ variable "tags" {
 
 variable "vpc_id" {
   type        = string
+  default     = null
   description = "AWS VPC to deploy MLflow into"
 }
 
@@ -115,6 +116,7 @@ variable "ecs_external_security_group_id" {
 
 variable "ecs_subnet_ids" {
   type        = list(string)
+  default     = null
   description = "List of subnets where the ECS cluster instances will be deployed"
 }
 
@@ -126,6 +128,7 @@ variable "cloudwatch_log_group_external_name" {
 
 variable "load_balancer_subnet_ids" {
   type        = list(string)
+  default     = null
   description = "List of subnets where the Load Balancer will be deployed"
 }
 
