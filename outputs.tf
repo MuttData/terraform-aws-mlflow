@@ -65,3 +65,16 @@ output "service_autoscaling_target_max_capacity" {
 output "artifact_bucket_id" {
   value = local.artifact_bucket_id
 }
+
+output "db_backend_store_username" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.db_backend_store_username
+}
+output "db_backend_store_address" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.db_backend_store_address
+}
+output "db_backend_store_port" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.db_backend_store_port
+}
+output "db_backend_store_name" {
+  value = var.launch_in_existing_cluster ? null : module.ecs_cluster.0.db_backend_store_name
+}
